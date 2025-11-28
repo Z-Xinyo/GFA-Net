@@ -1,0 +1,119 @@
+# Sequence based model arguments
+encoder_arguments_teacher = {
+    "t_input_size": 3200,
+    "s_input_size": 4096,
+    "hidden_size": 2048,
+    "num_head": 16
+}
+encoder_arguments = {
+    "t_input_size": 3200,
+    "s_input_size": 4096,
+    "hidden_size": 512,
+    "num_head": 16
+}
+
+data_path = "./data"
+
+class opts_ntu_60_cross_view():
+
+    def __init__(self):
+        self.encoder_args_teacher = encoder_arguments_teacher
+        self.encoder_args = encoder_arguments
+
+        # feeder
+        self.train_feeder_args = {
+            "data_path": data_path + "/ntu60/xview/train_data_joint.npy",
+            "num_frame_path": data_path + "/ntu60/xview/train_num_frame.npy",
+            "l_ratio": [0.1, 1],
+            "input_size": 64
+        }
+
+
+class opts_ntu_60_cross_subject():
+
+    def __init__(self):
+        self.encoder_args_teacher = encoder_arguments_teacher
+        self.encoder_args = encoder_arguments
+
+        # feeder
+        self.train_feeder_args = {
+            "data_path": data_path + "/ntu60/xsub/train_data_joint.npy",
+            "num_frame_path": data_path + "/ntu60/xsub/train_num_frame.npy",
+            "l_ratio": [0.1, 1],
+            "input_size": 64
+        }
+
+        self.train_feeder_args_test = {
+            "data_path": data_path + "/ntu60/xsub/train_data_joint.npy",
+            "label_path": data_path + "/ntu60/xsub/train_label.pkl",
+            'num_frame_path': data_path + "/ntu60/xsub/train_num_frame.npy",
+            'l_ratio': [0.95],
+            'input_size': 64
+        }
+        self.test_feeder_args = {
+            'data_path': data_path + "/ntu60/xsub/val_data_joint.npy",
+            'label_path': data_path + "/ntu60/xsub/val_label.pkl",
+            'num_frame_path': data_path + "/ntu60/xsub/val_num_frame.npy",
+            'l_ratio': [0.95],
+            'input_size': 64
+        }
+
+
+class opts_ntu_120_cross_subject():
+
+    def __init__(self):
+        self.encoder_args_teacher = encoder_arguments_teacher
+        self.encoder_args = encoder_arguments
+
+        # feeder
+        self.train_feeder_args = {
+            "data_path": data_path + "/ntu120/xsub/train_data_joint.npy",
+            "num_frame_path": data_path + "/ntu120/xsub/train_num_frame.npy",
+            "l_ratio": [0.1, 1],
+            "input_size": 64
+        }
+
+
+class opts_ntu_120_cross_setup():
+
+    def __init__(self):
+        self.encoder_args_teacher = encoder_arguments_teacher
+        self.encoder_args = encoder_arguments
+
+        # feeder
+        self.train_feeder_args = {
+            "data_path": data_path + "/ntu120/xsetup/train_data_joint.npy",
+            "num_frame_path": data_path + "/ntu120/xsetup/train_num_frame.npy",
+            "l_ratio": [0.1, 1],
+            "input_size": 64
+        }
+
+
+class opts_pku_part1_cross_subject():
+
+    def __init__(self):
+        self.encoder_args_teacher = encoder_arguments_teacher
+        self.encoder_args = encoder_arguments
+
+        # feeder
+        self.train_feeder_args = {
+            "data_path": data_path + "/crossclr_pkummd/pku_part1/xsub/train_data_joint.npy",
+            "num_frame_path": data_path + "/crossclr_pkummd/pku_part1/xsub/train_num_frame.npy",
+            "l_ratio": [0.1, 1],
+            "input_size": 64
+        }
+
+
+class opts_pku_part2_cross_subject():
+
+    def __init__(self):
+        self.encoder_args = encoder_arguments
+
+        # feeder
+        self.train_feeder_args = {
+            "data_path": data_path + "/crossclr_pkummd/pku_part2/xsub/train_data_joint.npy",
+            "num_frame_path": data_path + "/crossclr_pkummd/pku_part2/xsub/train_num_frame.npy",
+            "l_ratio": [0.1, 1],
+            "input_size": 64
+        }
+

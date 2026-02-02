@@ -1,6 +1,7 @@
 import argparse
 import os
 import random
+import shutil
 import time
 import warnings
 
@@ -24,7 +25,7 @@ from dataset import get_distill_training_set
 from dataset import get_distill_validation_set
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('-j', '--workers', default=12, type=int, metavar='N',
+parser.add_argument('-j', '--workers', default=24, type=int, metavar='N',
                     help='number of data loading workers (default: 32)')
 parser.add_argument('--epochs', default=200, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -86,7 +87,7 @@ def weights_init(model):
 def load_moco_encoder_q(model, pretrained):
     if os.path.isfile(pretrained):
         print("=> loading checkpoint '{}'".format(pretrained))
-        checkpoint = torch.load(pretrained, map_location="cpu", weights_only=True)
+        checkpoint = torch.load(pretrained, map_location="cpu", weights_only=False)
 
         # rename moco pre-trained keys
         state_dict = checkpoint['state_dict']
@@ -139,15 +140,15 @@ def main():
     opts.train_feeder_args['input_representation'] = args.skeleton_representation
 
     teacher_model = PretrainingEncoder(**opts.encoder_args_teacher)
-    load_moco_encoder_q(teacher_model, args.pretrained)
+    load_moco_encoder_q(teacher_model, args.pretrained)  #把 MoCo 预训练权重加载进去
 
     #teacher_model = teacher_model.cpu()
 
     # 配置量化
-    #teacher_model.qconfig = torch.quantization.get_default_qconfig('fbgemm')
-    #teacher_model = torch.quantization.prepare(teacher_model, inplace=False)
-    #teacher_model = torch.quantization.convert(teacher_model, inplace=False)
-    #group = [3, 3, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 3, 1, 1, 2, 2]
+    # teacher_model.qconfig = torch.quantization.get_default_qconfig('fbgemm')
+    # teacher_model = torch.quantization.prepare(teacher_model, inplace=False)
+    # teacher_model = torch.quantization.convert(teacher_model, inplace=False)
+    # group = [3, 3, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 3, 1, 1, 2, 2]
 
     model = SEED(teacher_model, opts.encoder_args, args.hico_dim, args.hico_k,args.hico_t,args.hico_temp)
     model = model.cuda()

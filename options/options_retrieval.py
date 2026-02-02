@@ -1,4 +1,4 @@
-data_path = "/dadaY/xinyu/dataset/self_supervised_data/"
+data_path = "/dadaY/xinyu/dataset/self_supervised_data"
 
 class  opts_ntu_60_cross_view():
 

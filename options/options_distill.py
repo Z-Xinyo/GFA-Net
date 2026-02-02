@@ -12,7 +12,7 @@ encoder_arguments = {
     "num_head": 16
 }
 
-data_path = "./data"
+data_path = "/dadaY/xinyu/dataset/self_supervised_data"
 
 class opts_ntu_60_cross_view():
 
@@ -107,6 +107,7 @@ class opts_pku_part1_cross_subject():
 class opts_pku_part2_cross_subject():
 
     def __init__(self):
+        self.encoder_args_teacher = encoder_arguments_teacher
         self.encoder_args = encoder_arguments
 
         # feeder

@@ -6,7 +6,7 @@ import shutil
 import time
 import warnings
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # 相当于脚本里的 cuda_device=0
+# os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # 相当于脚本里的 cuda_device=0
 
 import torch
 import torch.nn as nn
@@ -20,7 +20,7 @@ from torch.utils.tensorboard import SummaryWriter
 from dataset import get_pretraining_set_intra
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('-j', '--workers', default=0, type=int, metavar='N',
+parser.add_argument('-j', '--workers', default=24, type=int, metavar='N',
                     help='number of data loading workers (default: 32)')
 parser.add_argument('--epochs', default=200, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -37,7 +37,7 @@ parser.add_argument('--schedule', default=[350], nargs='*', type=int,
                     help='learning rate schedule (when to drop lr by 10x)')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum of SGD solver')
-parser.add_argument('--wd', '--weight-decay', default=0.001, type=float,
+parser.add_argument('--wd', '--weight-decay', default=0.0001, type=float,
                     metavar='W', help='weight decay (default: 1e-4)',
                     dest='weight_decay')
 parser.add_argument('-p', '--print-freq', default=10, type=int,
@@ -113,11 +113,10 @@ def main():
     print("options", opts.train_feeder_args)
     print(model)
 
-    # single gpu training
-    model = model.cuda()
+
 
     # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+    #
     # skeleton = torch.randn(1, 3, 64, 25, 2).to(device)
     # flops, params = profile(model, inputs=(skeleton, skeleton))
     #
@@ -126,20 +125,24 @@ def main():
 
     # 创建量化配置实例
     # qconfig = LinearOnlyQConfig()
-
-    #model.qconfig = torch.ao.quantization.get_default_qat_qconfig('qnnpack')
-    #torch.ao.quantization.prepare_qat(model, inplace=True)
-
-    #for name, module in model.named_modules():
+    #
+    # model.qconfig = torch.ao.quantization.get_default_qat_qconfig('qnnpack')
+    # torch.ao.quantization.prepare_qat(model, inplace=True)
+    #
+    # for name, module in model.named_modules():
     #    if isinstance(module, torch.nn.Linear):
     #        module.qconfig = qconfig
 
 
-    #total = sum([param.nelement() for param in model.parameters()])
-    #print("Number of parameter: %.2fM" % (total / 1e6))
+    total = sum([param.nelement() for param in model.parameters()])
+    print("Number of parameter: %.2fM" % (total / 1e6))
+
+    # single gpu training
+    model = model.cuda()
 
     criterion1 = nn.CrossEntropyLoss().cuda()
-    optimizer = torch.optim.SGD(model.parameters(), args.lr,
+    optimizer = torch.optim.SGD(model.parameters(),
+                                args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
 
@@ -165,8 +168,13 @@ def main():
 
     train_sampler = None
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
-        num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
+        train_dataset,
+        batch_size=args.batch_size,
+        shuffle=(train_sampler is None),
+        num_workers=args.workers,
+        pin_memory=True,
+        sampler=train_sampler,
+        drop_last=True)
 
     writer = SummaryWriter(args.checkpoint_path)
 

@@ -1,4 +1,4 @@
-data_path = "/dadaY/xinyu/dataset/self_supervised_data/"
+data_path = "/dadaY/xinyu/dataset/self_supervised_data"
 
 class  opts_ntu_60_cross_view():
 
@@ -8,7 +8,7 @@ class  opts_ntu_60_cross_view():
     self.encoder_args = {
       "t_input_size":3200,
       "s_input_size":4096,
-      "hidden_size":2048,
+      "hidden_size":512,
       "num_head":16,
       "num_class":60,
       }
@@ -39,7 +39,7 @@ class  opts_ntu_60_cross_subject():
     self.encoder_args = {
       "t_input_size":3200,
       "s_input_size":4096,
-      "hidden_size":2048,
+      "hidden_size":512,
       "num_head":16,
       "num_class":60,
       }
@@ -165,7 +165,7 @@ class  opts_pku_part2_cross_subject():
     self.encoder_args = {
       "t_input_size":3200,
       "s_input_size":4096,
-      "hidden_size":2048,
+      "hidden_size":512,
       "num_head":16,
       "num_class":51,
     }
@@ -188,33 +188,3 @@ class  opts_pku_part2_cross_subject():
       'input_size': 64
     }
 
-
-class opts_uav():
-
-  def __init__(self):
-    # Sequence based model
-    self.encoder_args = {
-      "t_input_size": 2048,
-      "s_input_size": 4096,
-      "hidden_size": 2048,
-      "num_head": 16,
-      "num_class": 155,
-    }
-
-    # feeder
-    self.train_feeder_args = {
-      "data_path": "/mnt/sdb/Disk_A/jiannan/uav/data/train_joint.npy",
-      "label_path": "/mnt/sdb/Disk_A/jiannan/uav/data/train_label.npy",
-      #"num_frame_path": data_path + "/pku_v2/xsub/train_num_frame.npy",
-      'l_ratio': [0.95],
-      'input_size': 64
-    }
-
-    self.test_feeder_args = {
-
-      "data_path": "/mnt/sdb/Disk_A/jiannan/uav/data/test_joint_B.npy",
-      "label_path": "/mnt/sdb/Disk_A/jiannan/uav/data/test_label_B.npy",
-      #"num_frame_path": data_path + "/pku_v2/xsub/val_num_frame.npy",
-      'l_ratio': [0.95],
-      'input_size': 64
-    }

@@ -246,3 +246,29 @@ class PretrainingEncoder_student(nn.Module):
         zsl = self.sl_proj(vsl)
 
         return zt, zs, ztl, zsl
+
+class DownstreamEncoder(nn.Module):
+    """multi_granularity network + classifier"""
+
+    def __init__(self, t_input_size, s_input_size, hidden_size, num_head, num_class=60):
+        super(DownstreamEncoder, self).__init__()
+
+        self.d_model = hidden_size
+
+        self.st_encoder = STEncoder(t_input_size, s_input_size, hidden_size, num_head)
+
+        # linear classifier
+        self.fc = nn.Linear(4 * self.d_model, num_class)
+
+    def forward(self, x, knn_eval=False):
+
+        vt, vs, vtl, vsl = self.st_encoder(x)
+
+        v = torch.cat([vt, vs, vtl, vsl], dim=1)
+
+        # return v
+
+        if knn_eval:  # return last layer features during  KNN evaluation (action retrieval)
+            return v
+        else:
+            return self.fc(v)

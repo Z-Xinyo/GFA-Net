@@ -69,9 +69,9 @@ parser.add_argument('--hico-dim', default=2048, type=int,
 parser.add_argument('--hico-k', default=2048, type=int,
                     help='queue size; number of negative keys (default: 16384)')
 parser.add_argument('--hico-t', default=0.07, type=float,
-                    help='student temp')
+                    help='student temp')  #学生温度
 parser.add_argument('--hico-temp', default=1e-3, type=float,
-                    help='teacher softmax temperature')
+                    help='teacher softmax temperature')  #教师软最大温度
 
 
 # initilize weight
@@ -86,13 +86,13 @@ def weights_init(model):
 
 
 def load_moco_encoder_q(model, pretrained):
-    if os.path.isfile(pretrained):
+    if os.path.isfile(pretrained):  #读取预训练模型
         print("=> loading checkpoint '{}'".format(pretrained))
         checkpoint = torch.load(pretrained, map_location="cpu", weights_only=True)
 
         # rename moco pre-trained keys
         state_dict = checkpoint['state_dict']
-        for k in list(state_dict.keys()):
+        for k in list(state_dict.keys()):  #遍历所有键
             # retain only encoder_q up to before the embedding layer
             if k.startswith('encoder_q') and not k.startswith('encoder_q.fc'):
                 # remove prefix
@@ -194,7 +194,7 @@ def main():
     # 将列表中的每个模型移动到 GPU
     # model_list = [model.cuda() for model in model_list]
     # define loss function (criterion) and optimizer
-    criterion = nn.CrossEntropyLoss().cuda()
+    criterion = nn.CrossEntropyLoss().cuda()  #交叉熵损失函数
     optimizers = [torch.optim.SGD(model.parameters(), args.lr,
                                   momentum=args.momentum,
                                   weight_decay=args.weight_decay)
@@ -222,7 +222,7 @@ def main():
 
     ## Data loading code
 
-    train_dataset = get_distill_set_intra(opts)
+    train_dataset = get_distill_set_intra(opts)  #获取数据集
     #train_dataset_2 = get_distill_training_set(opts)
     #val_dataset = get_distill_validation_set(opts)
 

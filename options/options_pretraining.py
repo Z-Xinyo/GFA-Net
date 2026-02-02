@@ -2,12 +2,12 @@
 encoder_arguments = {
    "t_input_size":3200, #时间维度输入大小  50*hidden_size(64)
    "s_input_size":4096, #空间维度输入大小  64*hidden_size(64)
-   "hidden_size":512,
+   "hidden_size":2048,
    "num_head":16,
    "num_class":128,
  }
 
-data_path = "/dadaY/xinyu/dataset/self_supervised_data/"
+data_path = "/dadaY/xinyu/dataset/self_supervised_data"
 
 class  opts_ntu_60_cross_view():
 

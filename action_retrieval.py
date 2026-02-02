@@ -17,7 +17,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn import preprocessing
 from sklearn.metrics import accuracy_score
 
-from f_net.st_encoder_downstream import DownstreamEncoder
+from gfa_net.st_encoder_downstream import DownstreamEncoder
 
 
 from dataset import get_finetune_training_set,get_finetune_validation_set
@@ -95,7 +95,7 @@ def knn(data_train, data_test, label_train, label_test, nn=9):
     Xte_Norm = preprocessing.normalize(data_test)
 
     knn = KNeighborsClassifier(n_neighbors=nn,
-                               metric='cosine')  
+                               metric='cosine')
     knn.fit(Xtr_Norm, label_train)
     pred = knn.predict(Xte_Norm)
     acc = accuracy_score(pred, label_test)

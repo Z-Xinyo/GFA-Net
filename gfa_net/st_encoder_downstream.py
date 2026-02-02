@@ -237,9 +237,9 @@ class DownstreamEncoder(nn.Module):
 
         v = torch.cat([vt, vs, vtl, vsl], dim=1)
 
-        return v
+        # return v
 
-        # if knn_eval:  # return last layer features during  KNN evaluation (action retrieval)
-        #     return v
-        # else:
-        #     return self.fc(v)
+        if knn_eval:  # return last layer features during  KNN evaluation (action retrieval)
+            return v
+        else:
+            return self.fc(v)

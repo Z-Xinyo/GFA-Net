@@ -34,12 +34,12 @@ import os
 def read_skeleton_filter(file):
     with open(file, 'r') as f:
         skeleton_sequence = {}
-        skeleton_sequence['numFrame'] = int(f.readline())  #帧数
+        skeleton_sequence['numFrame'] = int(f.readline())
         skeleton_sequence['frameInfo'] = []
-        # num_body = 0 遍历每一帧
+        # num_body = 0
         for t in range(skeleton_sequence['numFrame']):
             frame_info = {}
-            frame_info['numBody'] = int(f.readline()) # 每帧中包含的人体数
+            frame_info['numBody'] = int(f.readline())
             frame_info['bodyInfo'] = []
 
             for m in range(frame_info['numBody']):
@@ -48,7 +48,7 @@ def read_skeleton_filter(file):
                     'bodyID', 'clipedEdges', 'handLeftConfidence',
                     'handLeftState', 'handRightConfidence', 'handRightState',
                     'isResticted', 'leanX', 'leanY', 'trackingState'
-                ]  # 读取 body 的基本信息
+                ]
                 body_info = {
                     k: float(v)
                     for k, v in zip(body_info_key, f.readline().split())

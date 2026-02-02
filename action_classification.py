@@ -12,12 +12,12 @@ import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
 
-from gfa_net.st_encoder_downstream import DownstreamEncoder
+from gfa_net.st_encoder_student import DownstreamEncoder
 
 from dataset import get_finetune_training_set, get_finetune_validation_set,get_semi_training_set
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('-j', '--workers', default=12, type=int, metavar='N',
+parser.add_argument('-j', '--workers', default=24, type=int, metavar='N',
                     help='number of data loading workers (default: 32)')
 parser.add_argument('--epochs', default=80, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -49,7 +49,7 @@ parser.add_argument('--pretrained', default='', type=str,
 parser.add_argument('--finetune-dataset', default='ntu60', type=str,
                     help='which dataset to use for finetuning')
 parser.add_argument('--protocol', default='cross_view', type=str,
-                    help='traiining protocol of ntu')
+                    help='training protocol of ntu')
 parser.add_argument('--finetune_skeleton_representation', default='', type=str,
                     help='which skeleton-representation to use for downstream training')
 
@@ -92,27 +92,28 @@ def load_moco_encoder_q(model, pretrained):
 
 
 def load_moco_encoder_student(model, pretrained):
-    if os.path.isfile(pretrained):
-        print("=> loading checkpoint '{}'".format(pretrained))
-        checkpoint = torch.load(pretrained, map_location="cpu")
-
-        # rename moco pre-trained keys
-        state_dict = checkpoint['state_dict']
-        for k in list(state_dict.keys()):
-            # retain only encoder_q up to before the embedding layer
-            if k.startswith('encoder_student') and not k.startswith('encoder_student.fc'):
-                # remove prefix
-                state_dict[k[len("encoder_student."):]] = state_dict[k]
-            # delete renamed or unused k
-            del state_dict[k]
-
-        msg = model.load_state_dict(state_dict, strict=False)
-        print("message", msg)
-        # assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
-
-        print("=> loaded pre-trained model '{}'".format(pretrained))
-    else:
-        print("=> no checkpoint found at '{}'".format(pretrained))
+    if not os.path.isfile(pretrained):
+        print(f"=> no checkpoint found at '{pretrained}'")
+        return
+    print(f"=> loading backbone-only from '{pretrained}'")
+    checkpoint = torch.load(pretrained, map_location="cpu")
+    # rename moco pre-trained keys
+    state_dict = checkpoint.get("state_dict", checkpoint)
+    new_sd = {}
+    for k, v in state_dict.items():
+        # 兼容 DDP 保存的 "module." 前缀
+        if k.startswith("module."):
+            k = k[len("module."):]
+        # 只保留 student backbone
+        if k.startswith("encoder_student.st_encoder."):
+            # 去掉 encoder_student. 前缀，变成 st_encoder.xxx
+            new_k = k[len("encoder_student."):]
+            new_sd[new_k] = v
+    print(f"=> filtered keys for backbone: {len(new_sd)}")
+    msg = model.load_state_dict(new_sd, strict=False)
+    print("=> load_state_dict msg:")
+    print("   missing_keys (show up to 20):", msg.missing_keys[:20])
+    print("   unexpected_keys (show up to 20):", msg.unexpected_keys[:20])
 
 
 def main():
@@ -167,7 +168,7 @@ def main():
         model.fc.bias.data.zero_()
 
     # load from pre-trained  model
-    load_moco_encoder_q(model, args.pretrained)
+    load_moco_encoder_student(model, args.pretrained)
 
     model = model.cuda()
 
@@ -179,8 +180,10 @@ def main():
 
     # optimize only the linear classifier
     parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
-    # if args.pretrained:
-    #    assert len(parameters) == 2  # fc.weight, fc.bias
+
+    if args.pretrained:
+       assert len(parameters) == 2  # fc.weight, fc.bias
+
     optimizer = torch.optim.SGD(parameters, args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
@@ -215,6 +218,8 @@ def main():
     ## Data loading code
 
     train_dataset = get_finetune_training_set(opts)
+    # 半监督
+    # train_dataset = get_semi_training_set(opts)
     val_dataset = get_finetune_validation_set(opts)
 
     train_sampler = None
@@ -230,9 +235,7 @@ def main():
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True, drop_last=False)
 
-    train(train_loader, model, criterion, optimizer, 1, args)
-
-
+    # train(train_loader, model, criterion, optimizer, 1, args)
 
     for epoch in range(args.start_epoch, args.epochs):
 
@@ -295,36 +298,36 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         # qp_input = qp_input.float().cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
 
-        input_list.append(x.cpu().detach().numpy())
+        # input_list.append(x.cpu().detach().numpy())
 
         # compute output
         output = model(x)
         #features_list.append(output.cpu().detach().numpy())
 
-        # loss = criterion(output, target)
-        #
+        loss = criterion(output, target)
+
         # # measure accuracy and record loss
-        # acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        # losses.update(loss.item(), x.size(0))
-        # top1.update(acc1[0], x.size(0))
-        # top5.update(acc5[0], x.size(0))
+        acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        losses.update(loss.item(), x.size(0))
+        top1.update(acc1[0], x.size(0))
+        top5.update(acc5[0], x.size(0))
         #
         # # compute gradient and do SGD step
-        # optimizer.zero_grad()
-        # loss.backward()
-        # optimizer.step()
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
         #
         # # measure elapsed time
-        # batch_time.update(time.time() - end)
-        # end = time.time()
-        #
-        # if i % args.print_freq == 0:
-        #     progress.display(i)
+        batch_time.update(time.time() - end)
+        end = time.time()
+
+        if i % args.print_freq == 0:
+            progress.display(i)
 
     #all_outs = np.vstack(features_list)
-    all_inputs = np.vstack(input_list)
+    # all_inputs = np.vstack(input_list)
     #np.save("output_all.npy", all_outs)
-    np.save("input_all.npy", all_inputs)
+    # np.save("input_all.npy", all_inputs)
 
 
 def validate(val_loader, model, criterion, args):
